@@ -11,7 +11,10 @@ const CACHE_NAME = "reunion-ia-cache-v1";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-512-maskable.png"
 ];
 
 self.addEventListener("install", (event) => {
