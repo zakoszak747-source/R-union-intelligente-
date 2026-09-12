@@ -2,12 +2,16 @@
 // Met en cache la coquille de l'application pour permettre un premier
 // chargement hors-ligne. Ne met jamais en cache les appels à l'API IA
 // (requêtes POST), qui doivent toujours passer par le réseau.
+//
+// Chemins relatifs : fonctionne aussi bien à la racine d'un domaine
+// (ex. Netlify) que dans un sous-dossier (ex. GitHub Pages
+// username.github.io/nom-du-repo/).
 
 const CACHE_NAME = "reunion-ia-cache-v1";
 const ASSETS_TO_CACHE = [
-  "/",
-  "/index.html",
-  "/manifest.json"
+  "./",
+  "./index.html",
+  "./manifest.json"
 ];
 
 self.addEventListener("install", (event) => {
@@ -52,7 +56,7 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => caches.match("/index.html"));
+        .catch(() => caches.match("./index.html"));
     })
   );
 });
