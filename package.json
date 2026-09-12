@@ -1,0 +1,11 @@
+{
+  "name": "reunion-ia",
+  "version": "1.0.0",
+  "description": "Application web de reunion intelligente : enregistrement, transcription, comptes rendus IA et memoire de l'organisation.",
+  "private": true,
+  "scripts": {
+    "start": "npx serve . -l 3000",
+    "dev": "npx serve . -l 3000"
+  },
+  "license": "UNLICENSED"
+}
