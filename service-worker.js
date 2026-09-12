@@ -7,14 +7,15 @@
 // (ex. Netlify) que dans un sous-dossier (ex. GitHub Pages
 // username.github.io/nom-du-repo/).
 
-const CACHE_NAME = "reunion-ia-cache-v2";
+const CACHE_NAME = "reunion-ia-cache-v3";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
-  "./icon-512-maskable.png"
+  "./icon-512-maskable.png",
+  "./app-background.png"
 ];
 
 self.addEventListener("install", (event) => {
