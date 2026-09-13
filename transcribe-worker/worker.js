@@ -1,10 +1,14 @@
-// Cloudflare Worker — transcription audio via Whisper, hébergé gratuitement
-// par Cloudflare Workers AI (aucune clé OpenAI ni carte bancaire requise).
+// Cloudflare Worker — sert deux usages pour Réunion IA, tous deux gratuits
+// via Cloudflare Workers AI (aucune carte bancaire requise) :
 //
-// Le modele Whisper tourne directement sur l'infrastructure de Cloudflare.
-// Le plan gratuit inclut 10 000 "neurons" par jour.
+// 1. Transcription audio (Whisper) — quand la requête envoie de l'audio brut
+// 2. Génération de texte (rapports IA, mémoire, assistant) — quand la
+//    requête envoie du JSON { messages: [...], system?, max_tokens? }
 //
-// L'app envoie l'audio en corps brut de la requête (pas de multipart).
+// L'app choisit automatiquement le bon format selon l'action demandée.
+
+const TEXT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const AUDIO_MODEL = "@cf/openai/whisper";
 
 export default {
   async fetch(request, env) {
@@ -15,15 +19,35 @@ export default {
       return jsonResponse({ error: "Méthode non autorisée, utilise POST." }, 405);
     }
 
-    try {
-      const arrayBuffer = await request.arrayBuffer();
-      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
-        return jsonResponse({ error: "Aucun contenu audio reçu." }, 400);
-      }
-      const audioBytes = [...new Uint8Array(arrayBuffer)];
+    const contentType = request.headers.get("Content-Type") || "";
 
-      const result = await env.AI.run("@cf/openai/whisper", { audio: audioBytes });
-      return jsonResponse({ text: result.text || "" }, 200);
+    try {
+      if (contentType.includes("application/json")) {
+        // ---------- Génération de texte ----------
+        const body = await request.json();
+        const messages = body.messages || [{ role: "user", content: body.prompt || "" }];
+        const fullMessages = body.system
+          ? [{ role: "system", content: body.system }, ...messages]
+          : messages;
+
+        const result = await env.AI.run(TEXT_MODEL, {
+          messages: fullMessages,
+          max_tokens: body.max_tokens || 1000
+        });
+
+        return jsonResponse({ text: result.response || "" }, 200);
+
+      } else {
+        // ---------- Transcription audio ----------
+        const arrayBuffer = await request.arrayBuffer();
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          return jsonResponse({ error: "Aucun contenu audio reçu." }, 400);
+        }
+        const audioBytes = [...new Uint8Array(arrayBuffer)];
+
+        const result = await env.AI.run(AUDIO_MODEL, { audio: audioBytes });
+        return jsonResponse({ text: result.text || "" }, 200);
+      }
 
     } catch (err) {
       return jsonResponse({ error: "Erreur inattendue côté serveur.", details: String(err) }, 500);
