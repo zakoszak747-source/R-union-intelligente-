@@ -1,1 +1,22 @@
 
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Chaque utilisateur ne peut lire/écrire que ses propres données.
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Exception : le document d'abonnement lui-même. L'utilisateur peut le
+    // LIRE (pour voir son statut), mais ne peut PAS le modifier directement
+    // — seul le backend (compte de service, qui contourne ces règles) peut
+    // faire passer un abonnement à "active" après vérification du paiement.
+    // Cela empêche un utilisateur de s'auto-attribuer un abonnement gratuit
+    // en modifiant les données depuis le navigateur.
+    match /users/{uid}/subscription/current {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}
