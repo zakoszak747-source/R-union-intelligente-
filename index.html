@@ -3453,7 +3453,7 @@ async function enhanceAndResampleTo16k(buffer){
 
   const highpass = offlineCtx.createBiquadFilter();
   highpass.type = "highpass";
-  highpass.frequency.value = 120;
+  highpass.frequency.value = 90;
 
   const compressor = offlineCtx.createDynamicsCompressor();
   compressor.threshold.value = -50;
@@ -3484,28 +3484,6 @@ function computeRms(float32Array){
   return Math.sqrt(sumSquares / float32Array.length);
 }
 const SILENCE_RMS_THRESHOLD = 0.008;
-
-function applyNoiseGate(data, sampleRate){
-  const windowSize = Math.max(1, Math.floor(sampleRate * 0.01));
-  const attack = Math.max(1, Math.floor(sampleRate * 0.005));
-  const release = Math.max(1, Math.floor(sampleRate * 0.12));
-  const threshold = 0.015;
-  const out = new Float32Array(data.length);
-  let gain = 1;
-  for(let i=0; i<data.length; i+=windowSize){
-    const end = Math.min(data.length, i+windowSize);
-    let sum = 0;
-    for(let j=i; j<end; j++) sum += data[j]*data[j];
-    const rms = Math.sqrt(sum/(end-i));
-    const target = rms >= threshold ? 1 : 0.15;
-    const smoothing = target > gain ? attack : release;
-    for(let j=i; j<end; j++){
-      gain += (target-gain)/smoothing;
-      out[j] = data[j]*gain;
-    }
-  }
-  return out;
-}
 
 // Repère un segment de texte qui se répète en boucle plusieurs fois de
 // suite (mot pour mot ou presque) — signe quasi certain d'une hallucination
@@ -3598,7 +3576,6 @@ async function transcribeAudioFile(){
       const endSec = Math.min(totalDuration, startSec + TRANSCRIBE_CHUNK_SECONDS);
       const chunkBuffer = sliceAudioBuffer(audioBuffer, startSec, endSec, audioCtx);
       const enhancedBuffer = await enhanceAndResampleTo16k(chunkBuffer);
-      enhancedBuffer.copyToChannel(applyNoiseGate(enhancedBuffer.getChannelData(0), enhancedBuffer.sampleRate), 0);
 
       let text;
       const rms = computeRms(enhancedBuffer.getChannelData(0));
