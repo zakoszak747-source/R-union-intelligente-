@@ -7,7 +7,7 @@
 // (ex. Netlify) que dans un sous-dossier (ex. GitHub Pages
 // username.github.io/nom-du-repo/).
 
-const CACHE_NAME = "reunion-ia-cache-v27";
+const CACHE_NAME = "reunion-ia-cache-v28";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
